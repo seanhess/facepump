@@ -1,5 +1,6 @@
 import { HeaderBackground } from '@react-navigation/stack';
 import React, { useState } from 'react';
+import YouTubePlayer from 'react-native-youtube-sdk'
 
 import {
   SafeAreaView,
