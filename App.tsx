@@ -10,8 +10,8 @@ import React, { useState } from 'react';
 import 'react-native-gesture-handler';
 import { NavigationContainer, StackActions } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack';
-import Watch from './src/Screen/Watch'
-import Home from './src/Screen/Home'
+import Watch from './App/Screen/Watch'
+import Home from './App/Screen/Home'
 
 
 

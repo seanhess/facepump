@@ -1,6 +1,6 @@
 import { HeaderBackground } from '@react-navigation/stack';
-import React, { useState } from 'react';
-import YouTubePlayer from 'react-native-youtube-sdk'
+import React, { useState, useRef } from 'react';
+import YouTube from 'react-native-youtube'
 
 import {
   SafeAreaView,
@@ -19,12 +19,38 @@ const CARDS = ["one", "two", "three", "four", "five", "six", "seven"]
 
 const Watch: React.FC<Props> = (props) => {
 
+  const player = useRef<YouTube>(null);
+
+  function messAround() {
+    console.log("CLICK", player.current)
+    player.current?.seekTo(39.5)
+  }
+
+  // console.log(player.current)
+
   return (
     <>
       <StatusBar barStyle="dark-content" />
       <SafeAreaView>
-        <View style={styles.video}></View>
+        <View style={styles.video}>
+          <YouTube
+            videoId="3dluAhOU1cA" // The YouTube video ID
+            ref={player}
+            // controls={2}
+            // play // control playback of video with true/false
+            // fullscreen // control whether the video should play in fullscreen or inline
+            // loop // control whether the video should loop when ended
+            // onReady={e => this.setState({ isReady: true })}
+            // onChangeState={() => console.log("OnChangeState", e)}
+            // onChangeQuality={e => console.log("OnChangeQuty", e})
+            onError={e => console.log("ERROR")}
+            style={styles.youtube}
+          />
+        </View>
+
         <Text>HELLO</Text>
+        <Button onPress={e => messAround()} title="Do Something"/>
+
 
         <FlatList
             data={CARDS}
@@ -41,7 +67,11 @@ const Watch: React.FC<Props> = (props) => {
   )
 }
 
-const Card: React.FC<{msg:string}> = ({msg}) => {
+interface CardProps {
+  msg: string
+}
+
+const Card: React.FC<CardProps> = ({msg}) => {
   return (
     <View style={styles.card}>
       <Text>{msg}</Text>
@@ -50,6 +80,7 @@ const Card: React.FC<{msg:string}> = ({msg}) => {
 }
 
 const CARD_WIDTH = 350
+const VIDEO_HEIGHT = 250
 
 const styles = StyleSheet.create({
   section: {
@@ -58,7 +89,10 @@ const styles = StyleSheet.create({
   video: {
     backgroundColor: "#F00",
     width: '100%',
-    height: 250
+    height: VIDEO_HEIGHT
+  },
+  youtube: {
+    height: VIDEO_HEIGHT,
   },
   card: {
     width: CARD_WIDTH - 10,
