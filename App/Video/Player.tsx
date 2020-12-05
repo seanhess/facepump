@@ -47,7 +47,7 @@ const Player: React.FC<Props> = (props) => {
       ref.current?.getCurrentTime().then(time => {
         setCurrentTime(seconds(time))
         props.onProgress?.({currentTime:time})
-      }).catch(err => null)
+      }).catch(err => null) // discard errors?
     }, 100)
     return () => clearInterval(interval)
   })
@@ -56,24 +56,23 @@ const Player: React.FC<Props> = (props) => {
   // Only seek if the currentTime is different from the internal time
   useEffect(() => {
     var toTime = seconds(props.currentTime)
+    console.log("CHECK", toTime, currentTime)
     if (currentTime && toTime != currentTime) {
-      console.log("SEEK", toTime)
+      console.log("SEEK", toTime, currentTime)
       ref.current?.seekTo(toTime)
     }
   }, [props.currentTime])
 
 
+
+  // Remove onProgress because it incorrectly reports the time when paused, and only at 500ms intervals
+  // Call this manually in the interval above
+  const { onProgress, ...rest } = props
+
   return (
     <YouTube
       ref={ref}
-      videoId={props.videoId}
-      play={props.play}
-      // onReady={onReady}
-      // onChangeState={onChangeState}
-      // onChangeQuality={onChangeQuality}
-      // onError={onError}
-      // style={props.style}
-      {...props}
+      {...rest}
     />
   )
 }

@@ -22,9 +22,12 @@ const Watch: React.FC<Props> = (props) => {
 
   const [currentTime, setCurrentTime] = useState<Seconds>(seconds(0))
 
-  function messAround() {
-    // player.current?.seekTo(40.9)
-    setCurrentTime(seconds(60))
+  function moveTo(s:Seconds) {
+    setCurrentTime(s)
+  }
+
+  function onProgress(time:Seconds) {
+    setCurrentTime(time)
   }
 
   return (
@@ -45,12 +48,15 @@ const Watch: React.FC<Props> = (props) => {
             // onChangeState={() => console.log("OnChangeState", e)}
             // onChangeQuality={e => console.log("OnChangeQuty", e})
             // onError={e => console.log("ERROR")}
-            onProgress={(e => setCurrentTime(e.currentTime))}
+            onProgress={e => onProgress(e.currentTime)}
             style={styles.youtube}
           />
         </View>
 
-        <Button onPress={e => messAround()} title="60 Seconds"/>
+        <Button
+          onPress={e => moveTo(seconds(60))}
+          title="60 Seconds"
+        />
 
         <FlatList
             data={CARDS}
