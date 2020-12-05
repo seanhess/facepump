@@ -1,6 +1,7 @@
 import { HeaderBackground } from '@react-navigation/stack';
 import React, { useState, useRef } from 'react';
 import YouTube from 'react-native-youtube'
+import Player, { seconds, Seconds } from '../Video/Player'
 
 import {
   SafeAreaView,
@@ -19,23 +20,25 @@ const CARDS = ["one", "two", "three", "four", "five", "six", "seven"]
 
 const Watch: React.FC<Props> = (props) => {
 
-  const player = useRef<YouTube>(null);
+  const [currentTime, setCurrentTime] = useState<Seconds>(seconds(0))
 
   function messAround() {
-    console.log("CLICK", player.current)
-    player.current?.seekTo(39.5)
+    console.log("CLICK")
+    // player.current?.seekTo(40.9)
+    setCurrentTime(seconds(60))
   }
-
-  // console.log(player.current)
+  console.log("WATCH", currentTime)
 
   return (
     <>
       <StatusBar barStyle="dark-content" />
       <SafeAreaView>
         <View style={styles.video}>
-          <YouTube
+          <Player
             videoId="3dluAhOU1cA" // The YouTube video ID
-            ref={player}
+            currentTime={currentTime}
+            play
+            // ref={player}
             // controls={2}
             // play // control playback of video with true/false
             // fullscreen // control whether the video should play in fullscreen or inline
@@ -43,14 +46,14 @@ const Watch: React.FC<Props> = (props) => {
             // onReady={e => this.setState({ isReady: true })}
             // onChangeState={() => console.log("OnChangeState", e)}
             // onChangeQuality={e => console.log("OnChangeQuty", e})
-            onError={e => console.log("ERROR")}
+            // onError={e => console.log("ERROR")}
+            onProgress={(e => setCurrentTime(e.currentTime))}
             style={styles.youtube}
           />
         </View>
 
         <Text>HELLO</Text>
         <Button onPress={e => messAround()} title="Do Something"/>
-
 
         <FlatList
             data={CARDS}
