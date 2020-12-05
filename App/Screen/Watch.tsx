@@ -23,11 +23,9 @@ const Watch: React.FC<Props> = (props) => {
   const [currentTime, setCurrentTime] = useState<Seconds>(seconds(0))
 
   function messAround() {
-    console.log("CLICK")
     // player.current?.seekTo(40.9)
     setCurrentTime(seconds(60))
   }
-  console.log("WATCH", currentTime)
 
   return (
     <>
@@ -52,8 +50,7 @@ const Watch: React.FC<Props> = (props) => {
           />
         </View>
 
-        <Text>HELLO</Text>
-        <Button onPress={e => messAround()} title="Do Something"/>
+        <Button onPress={e => messAround()} title="60 Seconds"/>
 
         <FlatList
             data={CARDS}
