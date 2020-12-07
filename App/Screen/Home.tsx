@@ -33,7 +33,7 @@ type Props = {
 }
 
 const HomeScreen: React.FC<Props> = ({navigation}) => {
-  const [count, setCount] = useState(8)
+  const [count, setCount] = useState<number>(1)
 
   function goWatch() {
       navigation.navigate('Watch')

@@ -1,7 +1,8 @@
 import { HeaderBackground } from '@react-navigation/stack';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import YouTube from 'react-native-youtube'
-import Player, { seconds, Seconds } from '../Video/Player'
+import Player from '../Video/Player'
+import { Seconds, seconds } from '../Data/Time'
 
 import {
   SafeAreaView,
@@ -11,24 +12,81 @@ import {
   View,
   Text,
   StatusBar,
+  ViewToken
 } from 'react-native';
 
+type CardID = string
 
-type Props = {}
+interface GapCard {
+  type: "Gap"
+  id: CardID
+  start: Seconds
+}
 
-const CARDS = ["one", "two", "three", "four", "five", "six", "seven"]
+interface SubCard {
+  type: "Sub"
+  id: CardID
+  start: Seconds
+  subtitle: string
+  translation: string
+}
+
+type Card = GapCard | SubCard
+
+// Is this in the props? Sure
+interface Props {
+  cards: [Card]
+}
+
+interface OnViewableItemsChanged {
+  viewableItems: Array<ViewToken>
+  changed: Array<ViewToken>
+}
+
 
 const Watch: React.FC<Props> = (props) => {
 
   const [currentTime, setCurrentTime] = useState<Seconds>(seconds(0))
+  const [cards, setCards] = useState<Array<Card>>()
+  const [currentCard, setCurrentCard] = useState<Card>()
+
+  // https://stackoverflow.com/questions/48045696/flatlist-scrollview-error-on-any-state-change-invariant-violation-changing-on
+  // configure so it only counts one of them
+  const onViewRef = useRef((e:OnViewableItemsChanged)=> {
+    const card:Card = e.viewableItems.filter(c => c.isViewable).map(c => c.item)[0]
+    console.log("ON VIEW REF", card)
+    if (card) {
+      console.log("SET CARD", card.start, card)
+      setCurrentCard(card)
+      setCurrentTime(card.start)
+    }
+  })
+  const viewConfigRef = React.useRef({ viewAreaCoveragePercentThreshold: 95 })
+
+  // SIMULATE loading cards from the server
+  // make illegal states unrepresentable!
+  // they could have only a duration. then you woul da
+  useEffect(() => {
+    const cards:Array<Card> = [
+      {type: "Sub", id: "one", start: seconds(0), subtitle: "hello", translation: "hola"},
+      {type: "Gap", id: "two", start: seconds(33)},
+      {type: "Sub", id: "three", start: seconds(120), subtitle: "goodbye", translation: "adios"},
+    ]
+    setCards(cards)
+    setCurrentCard(cards[0])
+  }, [])
+
 
   function moveTo(s:Seconds) {
     setCurrentTime(s)
   }
 
   function onProgress(time:Seconds) {
+    console.log("PROGRESS", time)
     setCurrentTime(time)
   }
+
+  console.log("RENDER", currentTime)
 
   return (
     <>
@@ -55,18 +113,21 @@ const Watch: React.FC<Props> = (props) => {
 
         <Button
           onPress={e => moveTo(seconds(60))}
-          title="60 Seconds"
+          title="60 Secondsx"
         />
 
         <FlatList
-            data={CARDS}
-            renderItem={({item}) => <Card msg={item}/>}
-            keyExtractor={(card) => card}
+            data={cards}
+            renderItem={({item}) => <Card card={item}/>}
+            keyExtractor={(card) => card.id}
             horizontal={true}
             snapToAlignment={"center"}
             snapToInterval={CARD_WIDTH}
             decelerationRate={"fast"}
             pagingEnabled
+            onViewableItemsChanged={onViewRef.current}
+            viewabilityConfig={viewConfigRef.current}
+      // {type: "Gap", id: "two", start: seconds(20)},
         />
       </SafeAreaView>
     </>
@@ -74,13 +135,34 @@ const Watch: React.FC<Props> = (props) => {
 }
 
 interface CardProps {
-  msg: string
+  card: Card
 }
 
-const Card: React.FC<CardProps> = ({msg}) => {
+const Card: React.FC<CardProps> = ({card}) => {
+  switch (card.type) {
+    case 'Gap':
+      return <GapCard card={card}/>
+    case 'Sub':
+      return <SubCard card={card}/>
+  }
+}
+
+const GapCard: React.FC<{card:GapCard}> = ({card}) => {
   return (
     <View style={styles.card}>
-      <Text>{msg}</Text>
+      <Text>{card.type}</Text>
+      <Text>{card.start}</Text>
+    </View>
+  )
+}
+
+const SubCard: React.FC<{card:SubCard}> = ({card}) => {
+  return (
+    <View style={styles.card}>
+      <Text>{card.type}</Text>
+      <Text>{card.start}</Text>
+      <Text>{card.subtitle}</Text>
+      <Text>{card.translation}</Text>
     </View>
   )
 }

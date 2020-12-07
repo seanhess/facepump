@@ -1,32 +1,18 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import YouTube, { YouTubeProps } from 'react-native-youtube'
+import { Seconds, seconds} from '../Data/Time'
 
-import {
-  View, Text
-} from 'react-native';
-import { CurrentRenderContext } from '@react-navigation/native';
 
-export type SecondsMs =
-    number & { readonly __tag: unique symbol };
-export type Seconds =
-    number & { readonly __tag: unique symbol };
-
-export function seconds(n:number):Seconds {
-  return Math.floor(n) as Seconds
+interface ProgressEvent {
+  currentTime: Seconds
 }
-
-export function secondsMs(n:number):SecondsMs {
-  return n as SecondsMs
-}
-
-
-
-
 
 interface Props extends YouTubeProps {
-  currentTime: number;
+  currentTime: Seconds;
+  onProgress:(e:ProgressEvent) => void;
 }
+
 
 const Player: React.FC<Props> = (props) => {
 
@@ -35,18 +21,12 @@ const Player: React.FC<Props> = (props) => {
   // track currentTime locally
   const [currentTime, setCurrentTime] = useState<Seconds>(seconds(0))
 
-
-
-  function onError(e:any) {
-    console.log("ON ERROR", e)
-  }
-
   // Track time accurately, report to parent
   useEffect(() => {
     const interval = setInterval(() => {
       ref.current?.getCurrentTime().then(time => {
         setCurrentTime(seconds(time))
-        props.onProgress?.({currentTime:time})
+        props.onProgress?.({currentTime:seconds(time)})
       }).catch(err => null) // discard errors?
     }, 100)
     return () => clearInterval(interval)
@@ -55,9 +35,9 @@ const Player: React.FC<Props> = (props) => {
 
   // Only seek if the currentTime is different from the internal time
   useEffect(() => {
-    var toTime = seconds(props.currentTime)
+    var toTime = props.currentTime
     console.log("CHECK", toTime, currentTime)
-    if (currentTime && toTime != currentTime) {
+    if (toTime != currentTime) {
       console.log("SEEK", toTime, currentTime)
       ref.current?.seekTo(toTime)
     }
