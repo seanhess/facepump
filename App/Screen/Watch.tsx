@@ -2,7 +2,10 @@ import { HeaderBackground } from '@react-navigation/stack';
 import React, { useState, useRef, useEffect } from 'react';
 import YouTube from 'react-native-youtube'
 import Player from '../Video/Player'
-import { Seconds, seconds } from '../Data/Time'
+import { Seconds, seconds, fromMilliseconds } from '../Data/Time'
+import * as Subtitles from '../Data/Subtitles'
+import * as Cards from './Watch/Cards'
+import { Card, GapCard, SubCard } from './Watch/Cards'
 
 import {
   SafeAreaView,
@@ -15,23 +18,7 @@ import {
   ViewToken
 } from 'react-native';
 
-type CardID = string
 
-interface GapCard {
-  type: "Gap"
-  id: CardID
-  start: Seconds
-}
-
-interface SubCard {
-  type: "Sub"
-  id: CardID
-  start: Seconds
-  subtitle: string
-  translation: string
-}
-
-type Card = GapCard | SubCard
 
 // Is this in the props? Sure
 interface Props {
@@ -46,22 +33,34 @@ interface OnViewableItemsChanged {
 
 const Watch: React.FC<Props> = (props) => {
 
+  const cardListRef = useRef<FlatList<Card>>(null)
+
+
   const [currentTime, setCurrentTime] = useState<Seconds>(seconds(0))
   const [cards, setCards] = useState<Array<Card>>()
-  const [currentCard, setCurrentCard] = useState<Card>()
 
+  // Derived data
+  const currentCard = findCurrentCard(cards || [], currentTime)
+  const currentIndex = cards?.findIndex(c => c == currentCard)
+
+  // useEffect(() => {
+  //   console.log("INDEX", currentIndex, currentCard)
+  //   if (currentIndex && currentIndex >= 0) {
+  //     console.log("MOVE", currentIndex)
+  //     cardListRef.current?.scrollToIndex({animated: true, index: currentIndex})
+  //   }
+  // }, [currentIndex])
 
   // SIMULATE loading cards from the server
   // make illegal states unrepresentable!
   // they could have only a duration. then you woul da
   useEffect(() => {
-    const cards:Array<Card> = [
-      {type: "Sub", id: "one", start: seconds(0), subtitle: "hello", translation: "hola"},
-      {type: "Gap", id: "two", start: seconds(33)},
-      {type: "Sub", id: "three", start: seconds(120), subtitle: "goodbye", translation: "adios"},
-    ]
-    setCards(cards)
-    setCurrentCard(cards[0])
+    async function load() {
+      const subs = await Subtitles.loadSubs(null)
+      const cards:Array<Card> = Cards.convertToCards(subs)
+      setCards(cards)
+    }
+    load()
   }, [])
 
 
@@ -80,9 +79,9 @@ const Watch: React.FC<Props> = (props) => {
     const card:Card = e.viewableItems.filter(c => c.isViewable).map(c => c.item)[0]
     // console.log("ON VIEW REF", card)
     if (card) {
-      console.log("SET CARD", card.start, card)
-      setCurrentCard(card)
-      setCurrentTime(card.start)
+      const time = seconds(fromMilliseconds(card.begin))
+      console.log("SET CARaD", card.begin, time, card)
+      setCurrentTime(time)
     }
   })
   const viewConfigRef = React.useRef({ viewAreaCoveragePercentThreshold: 95 })
@@ -117,8 +116,9 @@ const Watch: React.FC<Props> = (props) => {
         />
 
         <FlatList
+            ref={cardListRef}
             data={cards}
-            renderItem={({item}) => <Card card={item}/>}
+            renderItem={({item}) => <CardView card={item}/>}
             keyExtractor={(card) => card.id}
             horizontal={true}
             snapToAlignment={"center"}
@@ -134,33 +134,41 @@ const Watch: React.FC<Props> = (props) => {
   )
 }
 
+// should I use the index instead? not necessarily
+function findCurrentCard(cards:Card[], currentTime:Seconds) {
+  const current = cards.filter(c => fromMilliseconds(c.begin) < currentTime)
+  if (current.length) {
+    return current[current.length - 1]
+  }
+}
+
 interface CardProps {
   card: Card
 }
 
-const Card: React.FC<CardProps> = ({card}) => {
+const CardView: React.FC<CardProps> = ({card}) => {
   switch (card.type) {
     case 'Gap':
-      return <GapCard card={card}/>
+      return <GapCardView card={card}/>
     case 'Sub':
-      return <SubCard card={card}/>
+      return <SubCardView card={card}/>
   }
 }
 
-const GapCard: React.FC<{card:GapCard}> = ({card}) => {
+const GapCardView: React.FC<{card:GapCard}> = ({card}) => {
   return (
-    <View style={styles.card}>
+    <View style={styles.gapCard}>
       <Text>{card.type}</Text>
-      <Text>{card.start}</Text>
+      <Text>{card.begin}</Text>
     </View>
   )
 }
 
-const SubCard: React.FC<{card:SubCard}> = ({card}) => {
+const SubCardView: React.FC<{card:SubCard}> = ({card}) => {
   return (
     <View style={styles.card}>
       <Text>{card.type}</Text>
-      <Text>{card.start}</Text>
+      <Text>{card.begin}</Text>
       <Text>{card.subtitle}</Text>
       <Text>{card.translation}</Text>
     </View>
@@ -186,6 +194,12 @@ const styles = StyleSheet.create({
     width: CARD_WIDTH - 10,
     height: 200,
     backgroundColor: "#0F0",
+    marginLeft: 5,
+    marginRight: 5,
+  },
+  gapCard: {
+    width: CARD_WIDTH - 10,
+    height: 200,
     marginLeft: 5,
     marginRight: 5,
   },

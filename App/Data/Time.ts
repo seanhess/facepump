@@ -44,6 +44,10 @@ export function milliseconds(mss:number):Milliseconds {
   return Math.floor(mss) as Milliseconds
 }
 
+export function fromMilliseconds(mss:Milliseconds):SecondsMs {
+  return secondsMs(mss / 1000)
+}
+
 // // you have secs 00, it's valid 00.000
 // export function fromSeconds(secs:Seconds):SecondsMs {
 //   return { value: secs.value } as SecondsMs
