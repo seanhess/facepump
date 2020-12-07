@@ -36,7 +36,7 @@ const Player: React.FC<Props> = (props) => {
   // Only seek if the currentTime is different from the internal time
   useEffect(() => {
     var toTime = props.currentTime
-    console.log("CHECK", toTime, currentTime)
+    // console.log("CHECK", toTime, currentTime)
     if (toTime != currentTime) {
       console.log("SEEK", toTime, currentTime)
       ref.current?.seekTo(toTime)

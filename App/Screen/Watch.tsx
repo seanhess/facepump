@@ -50,18 +50,6 @@ const Watch: React.FC<Props> = (props) => {
   const [cards, setCards] = useState<Array<Card>>()
   const [currentCard, setCurrentCard] = useState<Card>()
 
-  // https://stackoverflow.com/questions/48045696/flatlist-scrollview-error-on-any-state-change-invariant-violation-changing-on
-  // configure so it only counts one of them
-  const onViewRef = useRef((e:OnViewableItemsChanged)=> {
-    const card:Card = e.viewableItems.filter(c => c.isViewable).map(c => c.item)[0]
-    console.log("ON VIEW REF", card)
-    if (card) {
-      console.log("SET CARD", card.start, card)
-      setCurrentCard(card)
-      setCurrentTime(card.start)
-    }
-  })
-  const viewConfigRef = React.useRef({ viewAreaCoveragePercentThreshold: 95 })
 
   // SIMULATE loading cards from the server
   // make illegal states unrepresentable!
@@ -82,11 +70,23 @@ const Watch: React.FC<Props> = (props) => {
   }
 
   function onProgress(time:Seconds) {
-    console.log("PROGRESS", time)
+    // console.log("PROGRESS", time)
     setCurrentTime(time)
   }
 
-  console.log("RENDER", currentTime)
+  // https://stackoverflow.com/questions/48045696/flatlist-scrollview-error-on-any-state-change-invariant-violation-changing-on
+  // configure so it only counts one of them
+  const onViewRef = useRef((e:OnViewableItemsChanged)=> {
+    const card:Card = e.viewableItems.filter(c => c.isViewable).map(c => c.item)[0]
+    // console.log("ON VIEW REF", card)
+    if (card) {
+      console.log("SET CARD", card.start, card)
+      setCurrentCard(card)
+      setCurrentTime(card.start)
+    }
+  })
+  const viewConfigRef = React.useRef({ viewAreaCoveragePercentThreshold: 95 })
+
 
   return (
     <>
