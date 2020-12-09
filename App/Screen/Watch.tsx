@@ -1,7 +1,7 @@
 import { HeaderBackground } from '@react-navigation/stack';
-import React, { useState, useRef, useEffect } from 'react';
-import YouTube from 'react-native-youtube'
-import Player from '../Video/Player'
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import Player from './Watch/Player'
+import IndexList from './Watch/IndexList'
 import { Seconds, seconds, fromMilliseconds } from '../Data/Time'
 import * as Subtitles from '../Data/Subtitles'
 import * as Cards from './Watch/Cards'
@@ -22,38 +22,23 @@ import {
 
 // Is this in the props? Sure
 interface Props {
-  cards: [Card]
+
 }
 
-interface OnViewableItemsChanged {
-  viewableItems: Array<ViewToken>
-  changed: Array<ViewToken>
-}
 
 
 const Watch: React.FC<Props> = (props) => {
 
-  const cardListRef = useRef<FlatList<Card>>(null)
-
-
   const [currentTime, setCurrentTime] = useState<Seconds>(seconds(0))
-  const [cards, setCards] = useState<Array<Card>>()
+  const [cards, setCards] = useState<Array<Card>>([])
 
   // Derived data
-  const currentCard = findCurrentCard(cards || [], currentTime)
-  const currentIndex = cards?.findIndex(c => c == currentCard)
+  const currentCard = findCurrentCard(cards, currentTime)
+  const currentIndex = findIndex(cards, c => c == currentCard) || 0
 
-  // useEffect(() => {
-  //   console.log("INDEX", currentIndex, currentCard)
-  //   if (currentIndex && currentIndex >= 0) {
-  //     console.log("MOVE", currentIndex)
-  //     cardListRef.current?.scrollToIndex({animated: true, index: currentIndex})
-  //   }
-  // }, [currentIndex])
+  // console.log("WATCH", "time:", currentTime, "index:", currentIndex)
 
-  // SIMULATE loading cards from the server
-  // make illegal states unrepresentable!
-  // they could have only a duration. then you woul da
+
   useEffect(() => {
     async function load() {
       const subs = await Subtitles.loadSubs(null)
@@ -62,7 +47,6 @@ const Watch: React.FC<Props> = (props) => {
     }
     load()
   }, [])
-
 
   function moveTo(s:Seconds) {
     setCurrentTime(s)
@@ -73,19 +57,14 @@ const Watch: React.FC<Props> = (props) => {
     setCurrentTime(time)
   }
 
-  // https://stackoverflow.com/questions/48045696/flatlist-scrollview-error-on-any-state-change-invariant-violation-changing-on
-  // configure so it only counts one of them
-  const onViewRef = useRef((e:OnViewableItemsChanged)=> {
-    const card:Card = e.viewableItems.filter(c => c.isViewable).map(c => c.item)[0]
-    // console.log("ON VIEW REF", card)
+  function onIndexChange(index:number) {
+    const card = cards[index]
     if (card) {
       const time = seconds(fromMilliseconds(card.begin))
-      console.log("SET CARaD", card.begin, time, card)
+      console.log("ON INDEX CHANGE", index, "begin:", time)
       setCurrentTime(time)
     }
-  })
-  const viewConfigRef = React.useRef({ viewAreaCoveragePercentThreshold: 95 })
-
+  }
 
   return (
     <>
@@ -94,17 +73,8 @@ const Watch: React.FC<Props> = (props) => {
         <View style={styles.video}>
           <Player
             videoId="3dluAhOU1cA" // The YouTube video ID
-            currentTime={currentTime}
             play
-            // ref={player}
-            // controls={2}
-            // play // control playback of video with true/false
-            // fullscreen // control whether the video should play in fullscreen or inline
-            // loop // control whether the video should loop when ended
-            // onReady={e => this.setState({ isReady: true })}
-            // onChangeState={() => console.log("OnChangeState", e)}
-            // onChangeQuality={e => console.log("OnChangeQuty", e})
-            // onError={e => console.log("ERROR")}
+            currentTime={currentTime}
             onProgress={e => onProgress(e.currentTime)}
             style={styles.youtube}
           />
@@ -115,9 +85,10 @@ const Watch: React.FC<Props> = (props) => {
           title="60 Secondsx"
         />
 
-        <FlatList
-            ref={cardListRef}
+        <IndexList
             data={cards}
+            currentIndex={currentIndex}
+            onIndexChange={onIndexChange}
             renderItem={({item}) => <CardView card={item}/>}
             keyExtractor={(card) => card.id}
             horizontal={true}
@@ -125,8 +96,7 @@ const Watch: React.FC<Props> = (props) => {
             snapToInterval={CARD_WIDTH}
             decelerationRate={"fast"}
             pagingEnabled
-            onViewableItemsChanged={onViewRef.current}
-            viewabilityConfig={viewConfigRef.current}
+            viewabilityConfig={{ viewAreaCoveragePercentThreshold: 95 }}
       // {type: "Gap", id: "two", start: seconds(20)},
         />
       </SafeAreaView>
@@ -136,9 +106,19 @@ const Watch: React.FC<Props> = (props) => {
 
 // should I use the index instead? not necessarily
 function findCurrentCard(cards:Card[], currentTime:Seconds) {
-  const current = cards.filter(c => fromMilliseconds(c.begin) < currentTime)
+  const current = cards.filter(c => seconds(fromMilliseconds(c.begin)) <= currentTime)
   if (current.length) {
     return current[current.length - 1]
+  }
+}
+
+function findIndex<T>(as:Array<T>, p:((item:T) => boolean)) {
+  const i = as.findIndex(p)
+  if (i > 0) {
+    return i
+  }
+  else {
+    return undefined
   }
 }
 

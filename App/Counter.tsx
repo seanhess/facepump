@@ -13,6 +13,7 @@ type Props = {
 }
 
 const Counter: React.FC<Props> = (props) => {
+  console.log("COUNT", props.count)
   return (
     <View style={{width: '100%'}}>
       <Text style={styles.text}>{props.count}</Text>

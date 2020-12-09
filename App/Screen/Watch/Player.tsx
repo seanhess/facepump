@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import YouTube, { YouTubeProps } from 'react-native-youtube'
-import { Seconds, seconds} from '../Data/Time'
+import { Seconds, seconds} from '../../Data/Time'
 
 
 interface ProgressEvent {
@@ -9,8 +9,8 @@ interface ProgressEvent {
 }
 
 interface Props extends YouTubeProps {
-  currentTime: Seconds;
-  onProgress:(e:ProgressEvent) => void;
+  currentTime: Seconds
+  onProgress:(e:ProgressEvent) => void
 }
 
 
@@ -19,12 +19,14 @@ const Player: React.FC<Props> = (props) => {
   const ref = useRef<YouTube>(null)
 
   // track currentTime locally
+  // can we use all milliseconds?
   const [currentTime, setCurrentTime] = useState<Seconds>(seconds(0))
 
   // Track time accurately, report to parent
   useEffect(() => {
     const interval = setInterval(() => {
       ref.current?.getCurrentTime().then(time => {
+        // console.log("TIME", time)
         setCurrentTime(seconds(time))
         props.onProgress?.({currentTime:seconds(time)})
       }).catch(err => null) // discard errors?
