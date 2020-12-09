@@ -33,7 +33,7 @@ const Watch: React.FC<Props> = (props) => {
   const [cards, setCards] = useState<Array<Card>>([])
 
   // Derived data
-  const currentCard = findCurrentCard(cards, currentTime)
+  const currentCard = findCardForTime(cards, currentTime)
   const currentIndex = findIndex(cards, c => c == currentCard) || 0
 
   // console.log("WATCH", "time:", currentTime, "index:", currentIndex)
@@ -105,22 +105,25 @@ const Watch: React.FC<Props> = (props) => {
 }
 
 // should I use the index instead? not necessarily
-function findCurrentCard(cards:Card[], currentTime:Seconds) {
+function findCardForTime(cards:Card[], currentTime:Seconds) {
+  // Find all cards less than the current time, and take the last one
   const current = cards.filter(c => seconds(fromMilliseconds(c.begin)) <= currentTime)
-  if (current.length) {
-    return current[current.length - 1]
-  }
+  return last(current)
 }
 
-function findIndex<T>(as:Array<T>, p:((item:T) => boolean)) {
+function findIndex<T>(as:Array<T>, p:((a:T) => boolean)) {
   const i = as.findIndex(p)
   if (i > 0) {
     return i
   }
-  else {
-    return undefined
+}
+
+function last<T>(as:Array<T>) {
+  if (as.length) {
+    return as[as.length - 1]
   }
 }
+
 
 interface CardProps {
   card: Card
