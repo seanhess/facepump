@@ -32,6 +32,7 @@ export class IndexList<ItemT = any> extends React.Component<Props<ItemT>, State>
   // Ok, so it goes on its merry way, but if the index changes
   // then scroll to it!
   componentDidUpdate(prev:Props<ItemT>) {
+    // console.log("CHECK", "props.currentIndex:", this.props.currentIndex, "prev", prev.currentIndex, "state", this.state.localIndex )
     if (this.props.currentIndex != prev.currentIndex && this.props.currentIndex != this.state.localIndex) {
       console.log("SCROLL", this.props.currentIndex, "old:", prev.currentIndex)
       this.ref.current?.scrollToIndex({animated: true, index: this.props.currentIndex})
@@ -40,6 +41,7 @@ export class IndexList<ItemT = any> extends React.Component<Props<ItemT>, State>
 
   onItemChange(e:ViewableItemsChanged) {
     const index = e.viewableItems.find(info => info.isViewable)?.index
+    // is there a better way to check that a number has a value?
     if (index || index === 0) {
       this.setState({localIndex: index})
       if (index != this.props.currentIndex) {

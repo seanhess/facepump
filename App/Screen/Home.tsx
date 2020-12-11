@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import Counter from '../Counter'
+import * as Watch from './Watch'
 
 import {
   View,
@@ -20,23 +21,25 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 import { NavigationContainer } from '@react-navigation/native';
+import { HAPPY_GILMORE, SLAV_CAR, TOP_GEAR, TrackID } from '../Data/Subtitles';
 
 // TODO move to Route or Navigate module
 type Screen = 'Home' | 'Watch'
 
-type Navigation = {
-  navigate: (screen:Screen) => void
+
+type Navigation<T> = {
+  navigate: (screen:Screen, params: T ) => void
 }
 
 type Props = {
-  navigation: Navigation
+  navigation: Navigation<Watch.Params>
 }
 
 const HomeScreen: React.FC<Props> = ({navigation}) => {
   const [count, setCount] = useState<number>(1)
 
-  function goWatch() {
-      navigation.navigate('Watch')
+  function goWatch(track:TrackID) {
+    navigation.navigate('Watch', {trackID: track})
   }
 
   return (
@@ -56,8 +59,13 @@ const HomeScreen: React.FC<Props> = ({navigation}) => {
               </Text>
             </View>
             <View style={styles.sectionRowButton}>
-              <Text style={styles.sectionDescription}>OK</Text>
-              <Button onPress={goWatch} title="Watch"/>
+              <Button onPress={_ => goWatch(HAPPY_GILMORE)} title="Happy Gilmore"/>
+            </View>
+            <View style={styles.sectionRowButton}>
+              <Button onPress={_ => goWatch(TOP_GEAR)} title="Top Gear"/>
+            </View>
+            <View style={styles.sectionRowButton}>
+              <Button onPress={_ => goWatch(SLAV_CAR)} title="Slav Car"/>
             </View>
             <View style={styles.sectionContainer}>
               <Text style={styles.sectionTitle}>Count</Text>

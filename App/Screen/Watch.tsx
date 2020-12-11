@@ -4,6 +4,7 @@ import Player from './Watch/Player'
 import IndexList from './Watch/IndexList'
 import { Seconds, seconds, fromMilliseconds } from '../Data/Time'
 import * as Subtitles from '../Data/Subtitles'
+import { TrackID } from '../Data/Subtitles'
 import * as Cards from './Watch/Cards'
 import { Card, GapCard, SubCard } from './Watch/Cards'
 
@@ -11,24 +12,27 @@ import {
   SafeAreaView,
   StyleSheet,
   Button,
-  FlatList,
   View,
   Text,
   StatusBar,
-  ViewToken
 } from 'react-native';
 
 
+export interface Params {
+  trackID: TrackID
+}
 
 // Is this in the props? Sure
 interface Props {
-
+  navigation: any;
+  route: {params: Params}
 }
 
 
 
-const Watch: React.FC<Props> = (props) => {
+const Watch: React.FC<Props> = ({route}) => {
 
+  const trackID:TrackID = route.params?.trackID
   const [currentTime, setCurrentTime] = useState<Seconds>(seconds(0))
   const [cards, setCards] = useState<Array<Card>>([])
 
@@ -38,15 +42,15 @@ const Watch: React.FC<Props> = (props) => {
 
   // console.log("WATCH", "time:", currentTime, "index:", currentIndex)
 
-
   useEffect(() => {
+    console.log("Load Subs", trackID)
     async function load() {
-      const subs = await Subtitles.loadSubs(null)
+      const subs = await Subtitles.loadSubs(trackID)
       const cards:Array<Card> = Cards.convertToCards(subs)
       setCards(cards)
     }
-    load()
-  }, [])
+    load().catch(e => console.log("Load Subs Failed", e))
+  }, [trackID])
 
   function moveTo(s:Seconds) {
     setCurrentTime(s)
@@ -71,13 +75,13 @@ const Watch: React.FC<Props> = (props) => {
       <StatusBar barStyle="dark-content" />
       <SafeAreaView>
         <View style={styles.video}>
-          <Player
-            videoId="3dluAhOU1cA" // The YouTube video ID
+          {/* <Player
+            videoId={trackID}
             play
             currentTime={currentTime}
             onProgress={e => onProgress(e.currentTime)}
             style={styles.youtube}
-          />
+          /> */}
         </View>
 
         <Button
@@ -87,6 +91,7 @@ const Watch: React.FC<Props> = (props) => {
 
         <IndexList
             data={cards}
+            style={styles.cardList}
             currentIndex={currentIndex}
             onIndexChange={onIndexChange}
             renderItem={({item}) => <CardView card={item}/>}
@@ -97,7 +102,12 @@ const Watch: React.FC<Props> = (props) => {
             decelerationRate={"fast"}
             pagingEnabled
             viewabilityConfig={{ viewAreaCoveragePercentThreshold: 95 }}
-      // {type: "Gap", id: "two", start: seconds(20)},
+            getItemLayout={(data, index) => (
+              {length: CARD_WIDTH, offset: CARD_WIDTH * index, index}
+            )}
+            contentInset={{left: 15, top: 0, right: 0, bottom: 0}}
+            // ListHeaderComponent={() => <View style={styles.cardHeader}/>}
+            // ListFooterComponent={() => <View style={styles.cardHeader}/>}
         />
       </SafeAreaView>
     </>
@@ -106,8 +116,9 @@ const Watch: React.FC<Props> = (props) => {
 
 // should I use the index instead? not necessarily
 function findCardForTime(cards:Card[], currentTime:Seconds) {
-  // Find all cards less than the current time, and take the last one
+  // BUG: two cards within the same second. We can't handle it!
   const current = cards.filter(c => seconds(fromMilliseconds(c.begin)) <= currentTime)
+  // console.log("find card for time", "time:", currentTime, "cards:", current.map(c => c.begin))
   return last(current)
 }
 
@@ -182,11 +193,20 @@ const styles = StyleSheet.create({
   },
   gapCard: {
     width: CARD_WIDTH - 10,
+    backgroundColor: "#FF0",
     height: 200,
     marginLeft: 5,
     marginRight: 5,
   },
-  cards: {
+  cardHeader: {
+    width: 10,
+    height: 10,
+    marginLeft: 5,
+    marginRight: 5,
+    backgroundColor: "#F00"
+  },
+  cardList: {
+    backgroundColor: "#00F"
   }
 })
 
