@@ -2,7 +2,7 @@ import { HeaderBackground } from '@react-navigation/stack';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Player from './Watch/Player'
 import IndexList from './Watch/IndexList'
-import { Seconds, seconds, fromMilliseconds } from '../Data/Time'
+import { Seconds, seconds, fromMilliseconds, Milliseconds, milliseconds } from '../Data/Time'
 import * as Subtitles from '../Data/Subtitles'
 import { TrackID } from '../Data/Subtitles'
 import * as Cards from './Watch/Cards'
@@ -33,7 +33,7 @@ interface Props {
 const Watch: React.FC<Props> = ({route}) => {
 
   const trackID:TrackID = route.params?.trackID
-  const [currentTime, setCurrentTime] = useState<Seconds>(seconds(0))
+  const [currentTime, setCurrentTime] = useState<Milliseconds>(milliseconds(0))
   const [cards, setCards] = useState<Array<Card>>([])
 
   // Derived data
@@ -52,11 +52,11 @@ const Watch: React.FC<Props> = ({route}) => {
     load().catch(e => console.log("Load Subs Failed", e))
   }, [trackID])
 
-  function moveTo(s:Seconds) {
+  function moveTo(s:Milliseconds) {
     setCurrentTime(s)
   }
 
-  function onProgress(time:Seconds) {
+  function onProgress(time:Milliseconds) {
     // console.log("PROGRESS", time)
     setCurrentTime(time)
   }
@@ -64,9 +64,9 @@ const Watch: React.FC<Props> = ({route}) => {
   function onIndexChange(index:number) {
     const card = cards[index]
     if (card) {
-      const time = seconds(fromMilliseconds(card.begin))
+      const time:Milliseconds = card.begin
       console.log("ON INDEX CHANGE", index, "begin:", time)
-      setCurrentTime(time)
+      // setCurrentTime(time)
     }
   }
 
@@ -75,24 +75,24 @@ const Watch: React.FC<Props> = ({route}) => {
       <StatusBar barStyle="dark-content" />
       <SafeAreaView>
         <View style={styles.video}>
-          {/* <Player
-            videoId={trackID}
+          <Player videoId={trackID}
             play
             currentTime={currentTime}
             onProgress={e => onProgress(e.currentTime)}
             style={styles.youtube}
-          /> */}
+          />
         </View>
 
         <Button
-          onPress={e => moveTo(seconds(60))}
-          title="60 Secondsx"
+          onPress={e => moveTo(milliseconds(60500))}
+          title="60.5 Seconds"
         />
 
         <IndexList
             data={cards}
             style={styles.cardList}
             currentIndex={currentIndex}
+            initialScrollIndex={0}
             onIndexChange={onIndexChange}
             renderItem={({item}) => <CardView card={item}/>}
             keyExtractor={(card) => card.id}
@@ -103,9 +103,9 @@ const Watch: React.FC<Props> = ({route}) => {
             pagingEnabled
             viewabilityConfig={{ viewAreaCoveragePercentThreshold: 95 }}
             getItemLayout={(data, index) => (
-              {length: CARD_WIDTH, offset: CARD_WIDTH * index, index}
+              {length: CARD_WIDTH, offset: CARD_WIDTH * index - 20, index}
             )}
-            contentInset={{left: 15, top: 0, right: 0, bottom: 0}}
+            // contentInset={{left: 15, top: 0, right: 0, bottom: 0}}
             // ListHeaderComponent={() => <View style={styles.cardHeader}/>}
             // ListFooterComponent={() => <View style={styles.cardHeader}/>}
         />
@@ -115,9 +115,9 @@ const Watch: React.FC<Props> = ({route}) => {
 }
 
 // should I use the index instead? not necessarily
-function findCardForTime(cards:Card[], currentTime:Seconds) {
+function findCardForTime(cards:Card[], currentTime:Milliseconds) {
   // BUG: two cards within the same second. We can't handle it!
-  const current = cards.filter(c => seconds(fromMilliseconds(c.begin)) <= currentTime)
+  const current = cards.filter(c => c.begin <= currentTime)
   // console.log("find card for time", "time:", currentTime, "cards:", current.map(c => c.begin))
   return last(current)
 }

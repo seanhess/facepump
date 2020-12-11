@@ -26,7 +26,7 @@ export class IndexList<ItemT = any> extends React.Component<Props<ItemT>, State>
     this.state = {localIndex: 0}
 
     // https://stackoverflow.com/questions/48045696/flatlist-scrollview-error-on-any-state-change-invariant-violation-changing-on
-    this.onItemChange = this.onItemChange.bind(this)
+    // this.onItemChange = this.onItemChange.bind(this)
   }
 
   // Ok, so it goes on its merry way, but if the index changes
@@ -39,22 +39,23 @@ export class IndexList<ItemT = any> extends React.Component<Props<ItemT>, State>
     }
   }
 
-  onItemChange(e:ViewableItemsChanged) {
-    const index = e.viewableItems.find(info => info.isViewable)?.index
-    // is there a better way to check that a number has a value?
-    if (index || index === 0) {
-      this.setState({localIndex: index})
-      if (index != this.props.currentIndex) {
-        this.props.onIndexChange(index)
-      }
-    }
-  }
+  // I don't want to know if the item changed. I want to know if the user scrolled it (not scrollToIndex)
+  // onItemChange(e:ViewableItemsChanged) {
+  //   const index = e.viewableItems.find(info => info.isViewable)?.index
+  //   // is there a better way to check that a number has a value?
+  //   if (index || index === 0) {
+  //     this.setState({localIndex: index})
+  //     if (index != this.props.currentIndex) {
+  //       this.props.onIndexChange(index)
+  //     }
+  //   }
+  // }
 
   render() {
     return (
       <FlatList
         ref={this.ref}
-        onViewableItemsChanged={this.onItemChange}
+        // onViewableItemsChanged={this.onItemChange}
         {...this.props}
       />
     )
