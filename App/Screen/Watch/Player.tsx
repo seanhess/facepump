@@ -1,4 +1,5 @@
 
+import { CurrentRenderContext } from '@react-navigation/native';
 import React, { useState, useRef, useEffect } from 'react';
 import { onChange } from 'react-native-reanimated';
 import YouTube, { YouTubeProps } from 'react-native-youtube'
@@ -29,17 +30,25 @@ const Player: React.FC<Props> = (props) => {
 
   // track currentTime locally
   // can we use all milliseconds?
-  const [currentTime, setCurrentTime] = useState<Milliseconds>(milliseconds(0))
+  // const [currentTime, setCurrentTime] = useState<Milliseconds>(milliseconds(0))
+
+  const [resetTime, setResetTime] = useState<Milliseconds>(milliseconds(0))
+  const [offsetTime, setOffsetTime] = useState<Milliseconds>(milliseconds(0))
 
 
   // Only seek if the currentTime is different from the internal time
   useEffect(() => {
     const SEEK_THRESHOLD = milliseconds(500)
     var toTime = props.currentTime
+    const currentTime = milliseconds(resetTime + offsetTime)
     // console.log("CHECK", toTime, currentTime)
     if (Math.abs(toTime - currentTime) >= SEEK_THRESHOLD) {
-      console.log("SEEK", toTime, currentTime)
-      ref.current?.seekTo(fromMilliseconds(toTime))
+      console.log("Player.SEEK", currentTime, "=>", toTime)
+
+      // Can only seek in 1s intervals
+      ref.current?.seekTo(Math.floor(fromMilliseconds(toTime)))
+      setResetTime(toTime)
+      setOffsetTime(milliseconds(0))
     }
   }, [props.currentTime])
 
@@ -48,25 +57,37 @@ const Player: React.FC<Props> = (props) => {
   function onProgressInternal(e:{currentTime: SecondsMs}) {
     // every half second reset to exact time
     const time = milliseconds(e.currentTime * 1000)
-    // console.log("RESET", time)
-    setCurrentTime(time)
-    onProgress({currentTime: time})
+    // console.log("Player.RESET", time)
+    setResetTime(time)
+    setOffsetTime(milliseconds(0))
   }
 
-  // Track time 100ms resolution
+
+  // Track time at 100ms resolution.
   useEffect(() => {
     if (playerState == "playing") {
+      // console.log("Player.NewTimer")
+      var offsetTime:number = 0
       const interval = setInterval(() => {
-          const newTime = milliseconds(currentTime + 100)
-          setCurrentTime(newTime)
-          onProgress({currentTime: newTime})
+        offsetTime += 100
+        const newTime = milliseconds(offsetTime)
+        // console.log("Player.TIMER", newTime)
+        setOffsetTime(newTime)
       }, 100)
       return () => clearInterval(interval)
     }
-  }, [playerState, currentTime])
+  }, [playerState, resetTime])
+
+  // report progress as a function of resetTime and offsetTime
+  useEffect(() => {
+    const currentTime = milliseconds(resetTime + offsetTime)
+    // console.log(" - ", currentTime)
+    onProgress({currentTime: currentTime})
+  }, [resetTime, offsetTime])
+
 
   function onChangeStateInternal(e:{state:PlayerState}) {
-    console.log("CHANGE STATE", e.state)
+    // console.log("Player.STATE", e.state)
     setPlayerState(e.state)
     // if (onChangeState) onChangeState() // Need to fix types file
   }

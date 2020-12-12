@@ -15,6 +15,7 @@ import {
   View,
   Text,
   StatusBar,
+  Pressable
 } from 'react-native';
 
 
@@ -35,6 +36,7 @@ const Watch: React.FC<Props> = ({route}) => {
   const trackID:TrackID = route.params?.trackID
   const [currentTime, setCurrentTime] = useState<Milliseconds>(milliseconds(0))
   const [cards, setCards] = useState<Array<Card>>([])
+  const [playing, setPlaying] = useState<boolean>(true)
 
   // Derived data
   const currentCard = findCardForTime(cards, currentTime)
@@ -57,17 +59,27 @@ const Watch: React.FC<Props> = ({route}) => {
   }
 
   function onProgress(time:Milliseconds) {
-    // console.log("PROGRESS", time)
+    // console.log("Watch.onProgress", time)
     setCurrentTime(time)
+  }
+
+  function onScrollStart() {
+    // console.log("Scroll Start")
+    setPlaying(false)
   }
 
   function onIndexChange(index:number) {
     const card = cards[index]
     if (card) {
       const time:Milliseconds = card.begin
-      console.log("ON INDEX CHANGE", index, "begin:", time)
-      // setCurrentTime(time)
+      console.log("Watch.onIndexChange", index, "begin:", time)
+      setCurrentTime(time)
     }
+  }
+
+  function onPressCard() {
+    // console.log("ON PRESS")
+    setPlaying(!playing)
   }
 
   return (
@@ -76,39 +88,54 @@ const Watch: React.FC<Props> = ({route}) => {
       <SafeAreaView>
         <View style={styles.video}>
           <Player videoId={trackID}
-            play
+            // TODO put a view over this to prevent taps, you can hide their loading screen the same way
+            play={playing}
             currentTime={currentTime}
             onProgress={e => onProgress(e.currentTime)}
             style={styles.youtube}
           />
         </View>
 
-        <Button
-          onPress={e => moveTo(milliseconds(60500))}
-          title="60.5 Seconds"
-        />
 
         <IndexList
+            // https://reactnative.dev/docs/flatlist
+            // https://reactnative.dev/docs/scrollview
             data={cards}
             style={styles.cardList}
             currentIndex={currentIndex}
-            initialScrollIndex={0}
+            // initialScrollIndex={0}
             onIndexChange={onIndexChange}
-            renderItem={({item}) => <CardView card={item}/>}
+            renderItem={({item}) => <CardView card={item} onPress={onPressCard}/>}
             keyExtractor={(card) => card.id}
             horizontal={true}
             snapToAlignment={"center"}
             snapToInterval={CARD_WIDTH}
             decelerationRate={"fast"}
-            pagingEnabled
-            viewabilityConfig={{ viewAreaCoveragePercentThreshold: 95 }}
+            disableIntervalMomentum={true}
+            // overScrollMode="never"
+            showsHorizontalScrollIndicator={false}
+            showsVerticalScrollIndicator={false}
+            onScrollBeginDrag={onScrollStart}
             getItemLayout={(data, index) => (
               {length: CARD_WIDTH, offset: CARD_WIDTH * index - 20, index}
             )}
             // contentInset={{left: 15, top: 0, right: 0, bottom: 0}}
             // ListHeaderComponent={() => <View style={styles.cardHeader}/>}
             // ListFooterComponent={() => <View style={styles.cardHeader}/>}
+
+            // snapToStart={false} 
+            // pagingEnabled={true} // Disabled by snapTo props
+            // scrollsToTop={false} // doesn't help
         />
+
+        <Button
+          onPress={e => moveTo(milliseconds(60500))}
+          title="60.5 Seconds"
+        />
+
+        <Text>currentTime: {currentTime}</Text>
+        <Text>currentIndex: {currentIndex}</Text>
+        <DebugCardView card={currentCard}/>
       </SafeAreaView>
     </>
   )
@@ -117,9 +144,14 @@ const Watch: React.FC<Props> = ({route}) => {
 // should I use the index instead? not necessarily
 function findCardForTime(cards:Card[], currentTime:Milliseconds) {
   // BUG: two cards within the same second. We can't handle it!
-  const current = cards.filter(c => c.begin <= currentTime)
+  // console.log("CURRENT", currentTime)
+  const current = cards.filter(c => flatSecond(c.begin) <= flatSecond(currentTime))
   // console.log("find card for time", "time:", currentTime, "cards:", current.map(c => c.begin))
   return last(current)
+}
+
+function flatSecond(ms:Milliseconds):number {
+  return Math.floor(fromMilliseconds(ms))
 }
 
 function findIndex<T>(as:Array<T>, p:((a:T) => boolean)) {
@@ -136,41 +168,51 @@ function last<T>(as:Array<T>) {
 }
 
 
-interface CardProps {
-  card: Card
+interface CardProps<T> {
+  card: T,
+  onPress: () => void
 }
 
-const CardView: React.FC<CardProps> = ({card}) => {
+const CardView: React.FC<CardProps<Card>> = ({card, onPress}) => {
   switch (card.type) {
     case 'Gap':
-      return <GapCardView card={card}/>
+      return <GapCardView card={card} onPress={onPress}/>
     case 'Sub':
-      return <SubCardView card={card}/>
+      return <SubCardView card={card} onPress={onPress}/>
   }
 }
 
-const GapCardView: React.FC<{card:GapCard}> = ({card}) => {
+const GapCardView: React.FC<CardProps<GapCard>> = ({card, onPress}) => {
   return (
-    <View style={styles.gapCard}>
+    <Pressable style={styles.gapCard} onPress={onPress}>
       <Text>{card.type}</Text>
       <Text>{card.begin}</Text>
-    </View>
+    </Pressable>
   )
 }
 
-const SubCardView: React.FC<{card:SubCard}> = ({card}) => {
+const SubCardView: React.FC<CardProps<SubCard>> = ({card, onPress}) => {
   return (
-    <View style={styles.card}>
+    <Pressable style={styles.card} onPress={onPress}>
       <Text>{card.type}</Text>
       <Text>{card.begin}</Text>
       <Text>{card.subtitle}</Text>
       <Text>{card.translation}</Text>
-    </View>
+    </Pressable>
   )
 }
 
+const DebugCardView: React.FC<{card:any}> = ({card}) => {
+  if (card) {
+    return <CardView card={card} onPress={() => {}}></CardView>
+  }
+  else {
+    return <View/>
+  }
+}
+
 const CARD_WIDTH = 350
-const VIDEO_HEIGHT = 250
+const VIDEO_HEIGHT = 218
 
 const styles = StyleSheet.create({
   section: {
@@ -186,15 +228,15 @@ const styles = StyleSheet.create({
   },
   card: {
     width: CARD_WIDTH - 10,
-    height: 200,
+    height: 300,
     backgroundColor: "#0F0",
     marginLeft: 5,
     marginRight: 5,
   },
   gapCard: {
     width: CARD_WIDTH - 10,
-    backgroundColor: "#FF0",
-    height: 200,
+    // backgroundColor: "#FF0",
+    height: 300,
     marginLeft: 5,
     marginRight: 5,
   },
@@ -206,7 +248,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F00"
   },
   cardList: {
-    backgroundColor: "#00F"
+    // backgroundColor: "#00F"
   }
 })
 
