@@ -133,9 +133,9 @@ const Watch: React.FC<Props> = ({route}) => {
           title="60.5 Seconds"
         />
 
-        <Text>currentTime: {currentTime}</Text>
+        {/* <Text>currentTime: {currentTime}</Text>
         <Text>currentIndex: {currentIndex}</Text>
-        <DebugCardView card={currentCard}/>
+        <DebugCardView card={currentCard}/> */}
       </SafeAreaView>
     </>
   )
@@ -168,37 +168,46 @@ function last<T>(as:Array<T>) {
 }
 
 
-interface CardProps<T> {
-  card: T,
+interface CardProps {
+  card: Card,
   onPress: () => void
 }
 
-const CardView: React.FC<CardProps<Card>> = ({card, onPress}) => {
-  switch (card.type) {
-    case 'Gap':
-      return <GapCardView card={card} onPress={onPress}/>
-    case 'Sub':
-      return <SubCardView card={card} onPress={onPress}/>
-  }
-}
+const CardView: React.FC<CardProps> = ({card, onPress}) => {
 
-const GapCardView: React.FC<CardProps<GapCard>> = ({card, onPress}) => {
+  function cardByType(card:Card) {
+    switch (card.type) {
+      case 'Gap':
+        return <GapCardView card={card}/>
+      case 'Sub':
+        return <SubCardView card={card}/>
+    }
+  }
+
   return (
-    <Pressable style={styles.gapCard} onPress={onPress}>
-      <Text>{card.type}</Text>
-      <Text>{card.begin}</Text>
+    <Pressable onPress={onPress}>
+      {cardByType(card)}
     </Pressable>
   )
 }
 
-const SubCardView: React.FC<CardProps<SubCard>> = ({card, onPress}) => {
+const GapCardView: React.FC<{card:GapCard}> = ({card}) => {
   return (
-    <Pressable style={styles.card} onPress={onPress}>
+    <View style={styles.gapCard}>
+      <Text>{card.type}</Text>
+      <Text>{card.begin}</Text>
+    </View>
+  )
+}
+
+const SubCardView: React.FC<{card:SubCard}> = ({card}) => {
+  return (
+    <View style={styles.subCard}>
       <Text>{card.type}</Text>
       <Text>{card.begin}</Text>
       <Text>{card.subtitle}</Text>
       <Text>{card.translation}</Text>
-    </Pressable>
+    </View>
   )
 }
 
@@ -226,7 +235,7 @@ const styles = StyleSheet.create({
   youtube: {
     height: VIDEO_HEIGHT,
   },
-  card: {
+  subCard: {
     width: CARD_WIDTH - 10,
     height: 300,
     backgroundColor: "#0F0",
