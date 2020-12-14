@@ -1,21 +1,20 @@
 import { HeaderBackground } from '@react-navigation/stack';
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Player from './Watch/Player'
 import IndexList from './Watch/IndexList'
-import { Seconds, seconds, fromMilliseconds, Milliseconds, milliseconds } from '../Data/Time'
+import { fromMilliseconds, Milliseconds, milliseconds } from '../Data/Time'
 import * as Subtitles from '../Data/Subtitles'
 import { TrackID } from '../Data/Subtitles'
 import * as Cards from './Watch/Cards'
-import { Card, GapCard, SubCard } from './Watch/Cards'
+import { Card  } from './Watch/Cards'
+import { CardView, CARD_WIDTH, getCardLayout } from './Watch/CardView'
 
 import {
   SafeAreaView,
   StyleSheet,
   Button,
   View,
-  Text,
   StatusBar,
-  Pressable
 } from 'react-native';
 
 
@@ -54,9 +53,6 @@ const Watch: React.FC<Props> = ({route}) => {
     load().catch(e => console.log("Load Subs Failed", e))
   }, [trackID])
 
-  function moveTo(s:Milliseconds) {
-    setCurrentTime(s)
-  }
 
   function onProgress(time:Milliseconds) {
     // console.log("Watch.onProgress", time)
@@ -103,7 +99,6 @@ const Watch: React.FC<Props> = ({route}) => {
             data={cards}
             style={styles.cardList}
             currentIndex={currentIndex}
-            // initialScrollIndex={0}
             onIndexChange={onIndexChange}
             renderItem={({item}) => <CardView card={item} onPress={onPressCard}/>}
             keyExtractor={(card) => card.id}
@@ -112,26 +107,26 @@ const Watch: React.FC<Props> = ({route}) => {
             snapToInterval={CARD_WIDTH}
             decelerationRate={"fast"}
             disableIntervalMomentum={true}
-            // overScrollMode="never"
             showsHorizontalScrollIndicator={false}
             showsVerticalScrollIndicator={false}
             onScrollBeginDrag={onScrollStart}
-            getItemLayout={(data, index) => (
-              {length: CARD_WIDTH, offset: CARD_WIDTH * index - 20, index}
-            )}
+            getItemLayout={getCardLayout}
+
+            // Properties that don't fix the initial offset issue
+            // initialScrollIndex={0}
+            // overScrollMode="never"
             // contentInset={{left: 15, top: 0, right: 0, bottom: 0}}
             // ListHeaderComponent={() => <View style={styles.cardHeader}/>}
             // ListFooterComponent={() => <View style={styles.cardHeader}/>}
-
             // snapToStart={false} 
             // pagingEnabled={true} // Disabled by snapTo props
             // scrollsToTop={false} // doesn't help
         />
 
-        <Button
-          onPress={e => moveTo(milliseconds(60500))}
+        {/* <Button
+          onPress={e => setCurrentTime(milliseconds(60500))}
           title="60.5 Seconds"
-        />
+        /> */}
 
         {/* <Text>currentTime: {currentTime}</Text>
         <Text>currentIndex: {currentIndex}</Text>
@@ -168,48 +163,6 @@ function last<T>(as:Array<T>) {
 }
 
 
-interface CardProps {
-  card: Card,
-  onPress: () => void
-}
-
-const CardView: React.FC<CardProps> = ({card, onPress}) => {
-
-  function cardByType(card:Card) {
-    switch (card.type) {
-      case 'Gap':
-        return <GapCardView card={card}/>
-      case 'Sub':
-        return <SubCardView card={card}/>
-    }
-  }
-
-  return (
-    <Pressable onPress={onPress}>
-      {cardByType(card)}
-    </Pressable>
-  )
-}
-
-const GapCardView: React.FC<{card:GapCard}> = ({card}) => {
-  return (
-    <View style={styles.gapCard}>
-      <Text>{card.type}</Text>
-      <Text>{card.begin}</Text>
-    </View>
-  )
-}
-
-const SubCardView: React.FC<{card:SubCard}> = ({card}) => {
-  return (
-    <View style={styles.subCard}>
-      <Text>{card.type}</Text>
-      <Text>{card.begin}</Text>
-      <Text>{card.subtitle}</Text>
-      <Text>{card.translation}</Text>
-    </View>
-  )
-}
 
 const DebugCardView: React.FC<{card:any}> = ({card}) => {
   if (card) {
@@ -220,7 +173,6 @@ const DebugCardView: React.FC<{card:any}> = ({card}) => {
   }
 }
 
-const CARD_WIDTH = 350
 const VIDEO_HEIGHT = 218
 
 const styles = StyleSheet.create({
@@ -235,33 +187,11 @@ const styles = StyleSheet.create({
   youtube: {
     height: VIDEO_HEIGHT,
   },
-  subCard: {
-    width: CARD_WIDTH - 10,
-    height: 300,
-    backgroundColor: "#0F0",
-    marginLeft: 5,
-    marginRight: 5,
-  },
-  gapCard: {
-    width: CARD_WIDTH - 10,
-    // backgroundColor: "#FF0",
-    height: 300,
-    marginLeft: 5,
-    marginRight: 5,
-  },
-  cardHeader: {
-    width: 10,
-    height: 10,
-    marginLeft: 5,
-    marginRight: 5,
-    backgroundColor: "#F00"
-  },
   cardList: {
-    // backgroundColor: "#00F"
+    marginTop: 10
+
   }
 })
 
 export default Watch
 
-
-// Sam. Double tap to pause. then scroll, then double tap to unpause
