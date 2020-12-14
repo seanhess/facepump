@@ -6,13 +6,13 @@ import { fromMilliseconds, Milliseconds, milliseconds } from '../Data/Time'
 import * as Subtitles from '../Data/Subtitles'
 import { TrackID } from '../Data/Subtitles'
 import * as Cards from './Watch/Cards'
-import { Card  } from './Watch/Cards'
+import { Card, SubCard } from './Watch/Cards'
 import { CardView, CARD_WIDTH, getCardLayout } from './Watch/CardView'
+import { Checkbox, Button } from 'react-native-paper';
 
 import {
   SafeAreaView,
   StyleSheet,
-  Button,
   View,
   StatusBar,
 } from 'react-native';
@@ -36,6 +36,7 @@ const Watch: React.FC<Props> = ({route}) => {
   const [currentTime, setCurrentTime] = useState<Milliseconds>(milliseconds(0))
   const [cards, setCards] = useState<Array<Card>>([])
   const [playing, setPlaying] = useState<boolean>(true)
+  const [translationsEnabled, setTranslationsEnabled] = useState<boolean>(true)
 
   // Derived data
   const currentCard = findCardForTime(cards, currentTime)
@@ -78,6 +79,19 @@ const Watch: React.FC<Props> = ({route}) => {
     setPlaying(!playing)
   }
 
+  function onPressCardIn() {
+    // console.log("ON PRESS IN")
+    // when you hold down a card, it should pause at the end of the subtitle?
+    // setPlaying(false)
+  }
+
+  function onRefreshCard(card:SubCard) {
+    // console.log("REFRESH CARD")
+    // go to the top of the current card and play
+    setCurrentTime(card.begin)
+    setPlaying(true)
+  }
+
   return (
     <>
       <StatusBar barStyle="dark-content" />
@@ -100,7 +114,15 @@ const Watch: React.FC<Props> = ({route}) => {
             style={styles.cardList}
             currentIndex={currentIndex}
             onIndexChange={onIndexChange}
-            renderItem={({item}) => <CardView card={item} onPress={onPressCard}/>}
+            renderItem={({item}) =>
+              <CardView
+                card={item}
+                showTranslation={translationsEnabled}
+                onPress={onPressCard}
+                onPressIn={onPressCardIn}
+                onRefresh={onRefreshCard}
+              />
+            }
             keyExtractor={(card) => card.id}
             horizontal={true}
             snapToAlignment={"center"}
@@ -122,6 +144,15 @@ const Watch: React.FC<Props> = ({route}) => {
             // pagingEnabled={true} // Disabled by snapTo props
             // scrollsToTop={false} // doesn't help
         />
+ 
+        <Button
+          icon={translationsEnabled ? "checkbox-marked" : "checkbox-blank-outline"}
+          mode={translationsEnabled ? "contained" : "text"}
+          onPress={() => setTranslationsEnabled(!translationsEnabled)}
+          style={styles.translationButton}
+          >
+          Translations
+        </Button>
 
         {/* <Button
           onPress={e => setCurrentTime(milliseconds(60500))}
@@ -165,8 +196,10 @@ function last<T>(as:Array<T>) {
 
 
 const DebugCardView: React.FC<{card:any}> = ({card}) => {
+
+  function ignore() {}
   if (card) {
-    return <CardView card={card} onPress={() => {}}></CardView>
+    return <CardView card={card} onPress={ignore} onPressIn={ignore} onRefresh={ignore} showTranslation={true}/>
   }
   else {
     return <View/>
@@ -189,7 +222,9 @@ const styles = StyleSheet.create({
   },
   cardList: {
     marginTop: 10
-
+  },
+  translationButton: {
+    margin: 10,
   }
 })
 

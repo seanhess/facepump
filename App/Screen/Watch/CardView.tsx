@@ -4,6 +4,8 @@ import {
   Button,
   View,
   StatusBar,
+  ScrollView,
+  RefreshControl,
   Pressable
 } from 'react-native';
 
@@ -17,15 +19,19 @@ export const CARD_MARGIN = 10
 
 export interface CardProps<T> {
   card: T,
-  onPress: () => void
+  showTranslation: boolean,
+  onPress: () => void,
+  onPressIn: () => void,
+  onRefresh: (card:SubCard) => void
 }
 
-export const CardView: React.FC<CardProps<CardData>> = ({card, onPress}) => {
+export const CardView: React.FC<CardProps<CardData>> = (props) => {
+  const { card, ...rest } =  props
   switch (card.type) {
     case 'Gap':
       return <GapView gap={card}/>
     case 'Sub':
-      return <SubCardView card={card} onPress={onPress}/>
+      return <SubCardView card={card} {...rest}/>
   }
 
 }
@@ -38,16 +44,36 @@ const GapView: React.FC<{gap:GapCard}> = ({gap}) => {
   )
 }
 
-const SubCardView: React.FC<CardProps<SubCard>> = ({card, onPress}) => {
+const SubCardView: React.FC<CardProps<SubCard>> = ({card, showTranslation, onPress, onPressIn, onRefresh}) => {
+
+  // const [refreshing, setRefreshing] = React.useState(false);
+
+  // function onRefresh() {
+  //   console.log("REFRESH")
+  //   setRefreshing(true);
+  //   // wait(2000).then(() => setRefreshing(false));
+  // }
+  
   return (
-    <Card style={styles.card} onPress={onPress}>
-      <Card.Content>
-        {/* <Paragraph>{card.type}</Paragraph>
-        <Paragraph>{card.begin}</Paragraph> */}
-        <Headline>{card.subtitle}</Headline>
-        <Paragraph style={styles.translation}>{card.translation}</Paragraph>
-      </Card.Content>
-    </Card>
+    <ScrollView
+      refreshControl={ <RefreshControl refreshing={false} onRefresh={() => onRefresh(card)} /> }
+      showsHorizontalScrollIndicator={false}
+      showsVerticalScrollIndicator={false}
+      >
+      <Pressable onPress={onPress} onPressIn={onPressIn}>
+        <Card style={styles.card}>
+          <Card.Content style={styles.content}>
+            {/* <Paragraph>{card.type}</Paragraph>
+            <Paragraph>{card.begin}</Paragraph> */}
+            <Headline>{card.subtitle}</Headline>
+            <View style={styles.space}/>
+            <Paragraph style={styleTranslation(showTranslation)}>
+              {card.translation}
+            </Paragraph>
+          </Card.Content>
+        </Card>
+      </Pressable>
+    </ScrollView>
   )
 }
 
@@ -71,7 +97,18 @@ const styles = StyleSheet.create({
   subtitle: {
     fontWeight: "500"
   },
-  translation: {
-    color: "#555",
+  space: {
+    flexGrow: 1,
+  },
+  content: {
+    display: "flex",
+    flexDirection: "column",
+    height: "100%"
   }
 })
+
+function styleTranslation(shown:boolean) {
+  return { 
+    color: shown ? "#555" : "#FFF"
+  }
+}
