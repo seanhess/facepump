@@ -1,3 +1,5 @@
+// Cards: view model data for subtitles
+
 import { Seconds, seconds, milliseconds, Milliseconds } from '../../Data/Time'
 import { Sub } from '../../Data/Subtitles'
 
@@ -20,12 +22,12 @@ export interface SubCard {
 }
 
 export type Card = GapCard | SubCard
+const GAP_THRESHOLD:Milliseconds = milliseconds(1000)
 
+// Convert subtitles (data oriented) to cards (view oriented)
 export function convertToCards(subs:Sub[]):Card[] {
   return subs.reduce<Card[]>(generateCards, [])
 }
-
-const GAP_THRESHOLD:Milliseconds = milliseconds(1000)
 
 function generateCards(cards:Card[], next:Sub):Card[] {
   const lastEnd:Milliseconds = lastCardEndTime(cards)

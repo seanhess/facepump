@@ -1,5 +1,4 @@
-
-
+// Load subtitles, parse into better format
 import data1 from '../../prototype/data_3dluAhOU1cA'
 import data2 from '../../prototype/data_dJfSS0ZXYdo'
 import data3 from '../../prototype/data_K9CgSjQDAvE'
@@ -33,6 +32,7 @@ interface SubInput {
   text: string
 }
 
+// Public interface to subtitles
 export interface Sub {
   begin: Milliseconds
   end: Milliseconds

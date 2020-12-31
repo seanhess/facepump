@@ -1,6 +1,6 @@
+// Debug home screen
 
 import React, { useState } from 'react';
-import Counter from '../Counter'
 import * as Watch from './Watch'
 
 import {
@@ -36,8 +36,6 @@ type Props = {
 }
 
 const HomeScreen: React.FC<Props> = ({navigation}) => {
-  const [count, setCount] = useState<number>(1)
-
   function goWatch(track:TrackID) {
     navigation.navigate('Watch', {trackID: track})
   }
@@ -66,10 +64,6 @@ const HomeScreen: React.FC<Props> = ({navigation}) => {
             </View>
             <View style={styles.sectionRowButton}>
               <Button onPress={_ => goWatch(SLAV_CAR)} title="Slav Car"/>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Count</Text>
-              <Counter count={count} onCount={setCount}/>
             </View>
             <View style={styles.sectionContainer}>
               <Text style={styles.sectionTitle}>See Your Changes</Text>

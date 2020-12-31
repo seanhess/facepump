@@ -1,4 +1,5 @@
-import { HeaderBackground } from '@react-navigation/stack';
+// Watch: the learning experience
+
 import React, { useState, useEffect, useCallback } from 'react';
 import Player from './Watch/Player'
 import IndexList from './Watch/IndexList'
@@ -160,22 +161,20 @@ const Watch: React.FC<Props> = ({route}) => {
         /> */}
 
         {/* <Text>currentTime: {currentTime}</Text>
-        <Text>currentIndex: {currentIndex}</Text>
-        <DebugCardView card={currentCard}/> */}
+        <Text>currentIndex: {currentIndex}</Text> */}
+       
       </SafeAreaView>
     </>
   )
 }
 
-// should I use the index instead? not necessarily
+// which card is displayed for the given currentTime?
 function findCardForTime(cards:Card[], currentTime:Milliseconds) {
-  // BUG: two cards within the same second. We can't handle it!
-  // console.log("CURRENT", currentTime)
   const current = cards.filter(c => flatSecond(c.begin) <= flatSecond(currentTime))
-  // console.log("find card for time", "time:", currentTime, "cards:", current.map(c => c.begin))
   return last(current)
 }
 
+// round to nearest second.
 function flatSecond(ms:Milliseconds):number {
   return Math.floor(fromMilliseconds(ms))
 }
@@ -193,18 +192,6 @@ function last<T>(as:Array<T>) {
   }
 }
 
-
-
-const DebugCardView: React.FC<{card:any}> = ({card}) => {
-
-  function ignore() {}
-  if (card) {
-    return <CardView card={card} onPress={ignore} onPressIn={ignore} onRefresh={ignore} showTranslation={true}/>
-  }
-  else {
-    return <View/>
-  }
-}
 
 const VIDEO_HEIGHT = 218
 

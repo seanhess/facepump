@@ -1,7 +1,9 @@
+// Improved YouTube Player Component/Wrapper
+// - responds to currentTime prop
+// - reports onProgress({currentTime}) at accurate 100ms intervals
+// - limitation: can only seek to whole seconds
 
-import { CurrentRenderContext } from '@react-navigation/native';
 import React, { useState, useRef, useEffect } from 'react';
-import { onChange } from 'react-native-reanimated';
 import YouTube, { YouTubeProps } from 'react-native-youtube'
 import { Milliseconds, SecondsMs, Seconds, milliseconds, fromMilliseconds } from '../../Data/Time'
 

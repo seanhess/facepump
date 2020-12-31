@@ -1,23 +1,6 @@
-
-
-// I want to make it impossible to misuse these
-
-// export type SecondsMs = {
-//   value: number;
-//   readonly __tag: unique symbol;
-// }
-
-// // 12345
-// export type Milliseconds = {
-//   value: number;
-//   readonly __tag: unique symbol;
-// }
-
-// // 12
-// export type Seconds = {
-//   value: number;
-//   readonly __tag: unique symbol;
-// }
+// Types to make it harder to mix up time representations
+// - will catch errors when passed to functions
+// - will not catch errors when compared (<=, ==, etc) (Typescript limitation)
 
 // 12.345
 export type SecondsMs =
@@ -47,29 +30,3 @@ export function milliseconds(mss:number):Milliseconds {
 export function fromMilliseconds(mss:Milliseconds):SecondsMs {
   return secondsMs(mss / 1000)
 }
-
-// // you have secs 00, it's valid 00.000
-// export function fromSeconds(secs:Seconds):SecondsMs {
-//   return { value: secs.value } as SecondsMs
-// }
-
-// export function fromMilliseconds(ms:Milliseconds):SecondsMs {
-//   return { value: ms.value / 1000 } as SecondsMs
-// }
-
-// export function toSeconds(s:SecondsMs):Seconds {
-//   return seconds(s.value)
-// }
-
-// export function toMilliseconds(s:SecondsMs):SecondsMs {
-//   return secondsMs(s.value * 1000)
-// }
-
-// I need a time to convert to all together
-// secondsMs sounds good
-
-// toSecondsMs -> number secs.ms
-// no, they all have a .value, that works
-
-
-

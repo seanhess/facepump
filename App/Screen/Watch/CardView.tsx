@@ -1,9 +1,7 @@
+// View for individual card
 import {
-  SafeAreaView,
   StyleSheet,
-  Button,
   View,
-  StatusBar,
   ScrollView,
   RefreshControl,
   Pressable
@@ -33,7 +31,6 @@ export const CardView: React.FC<CardProps<CardData>> = (props) => {
     case 'Sub':
       return <SubCardView card={card} {...rest}/>
   }
-
 }
 
 const GapView: React.FC<{gap:GapCard}> = ({gap}) => {
@@ -45,15 +42,6 @@ const GapView: React.FC<{gap:GapCard}> = ({gap}) => {
 }
 
 const SubCardView: React.FC<CardProps<SubCard>> = ({card, showTranslation, onPress, onPressIn, onRefresh}) => {
-
-  // const [refreshing, setRefreshing] = React.useState(false);
-
-  // function onRefresh() {
-  //   console.log("REFRESH")
-  //   setRefreshing(true);
-  //   // wait(2000).then(() => setRefreshing(false));
-  // }
-  
   return (
     <ScrollView
       refreshControl={ <RefreshControl refreshing={false} onRefresh={() => onRefresh(card)} /> }

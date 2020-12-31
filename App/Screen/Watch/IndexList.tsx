@@ -1,3 +1,6 @@
+// Paged list component that responds to changes in currentIndex
+// avoids needing to use refs and functions to scroll
+
 import React, { RefObject } from 'react';
 import {
   FlatList,
